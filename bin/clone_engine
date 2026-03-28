@@ -158,6 +158,11 @@ done
 echo "[5/6] Re-initializing version control..."
 git init > /dev/null
 git add .
+# set initial commit credentials
+export GIT_AUTHOR_NAME="${GIT_AUTHOR_NAME:-Tibo}"
+export GIT_AUTHOR_EMAIL="${GIT_AUTHOR_EMAIL:-tibo@example.com}"
+export GIT_COMMITTER_NAME="${GIT_COMMITTER_NAME:-Tibo}"
+export GIT_COMMITTER_EMAIL="${GIT_COMMITTER_EMAIL:-tibo@example.com}"
 git commit -m "Initial commit: Cloned from $SOURCE_NAME_PASCAL" > /dev/null
 
 echo "[6/6] Operation Complete."
