@@ -15,6 +15,20 @@
 
 set -e # Exit immediately if a command exits with a non-zero status
 
+# --- 0. CLEANUP TRAP ---
+
+TARGET_CREATED=false
+
+cleanup() {
+    if [ "$TARGET_CREATED" = true ] && [ -d "$TARGET_PATH" ]; then
+        echo ""
+        echo "Error: Script failed. Cleaning up '$TARGET_PATH'..."
+        rm -rf "$TARGET_PATH"
+    fi
+}
+
+trap cleanup ERR
+
 # --- 1. CONFIGURATION & VALIDATION ---
 
 SOURCE_PATH="$1"
@@ -68,6 +82,7 @@ fi
 
 echo "[1/6] Duplicating source directory..."
 cp -R "$SOURCE_PATH" "$TARGET_PATH"
+TARGET_CREATED=true
 cd "$TARGET_PATH"
 
 echo "[2/6] Sanitizing artifacts..."
