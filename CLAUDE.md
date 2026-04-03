@@ -8,15 +8,19 @@ TiboCore is a **Rails 8.1 mountable engine template** with namespace isolation (
 
 ## Commands
 
+All commands run inside the Docker container:
+
 ```bash
-bundle exec rspec                              # Run all specs
-bundle exec rspec spec/integration/solid_stack_spec.rb  # Run single spec file
-bundle exec rubocop                            # Lint
-bundle exec rubocop -a                         # Auto-fix lint
-bin/dev                                        # Start dev server (Foreman: web + css + worker)
-cd spec/dummy && RAILS_ENV=test bin/rails db:prepare    # Prepare test databases
-bin/clone_engine /path/to/tibo_core NewEngineName       # Generate new engine from template
+docker compose exec rails bash -lc 'RAILS_ENV=test bundle exec rspec'                            # Run all specs
+docker compose exec rails bash -lc 'RAILS_ENV=test bundle exec rspec spec/integration/solid_stack_spec.rb'  # Run single spec file
+docker compose exec rails bash -lc 'bundle exec rubocop'                                          # Lint
+docker compose exec rails bash -lc 'bundle exec rubocop -a'                                       # Auto-fix lint
+docker compose exec rails bash -lc 'bin/setup'                                                    # First-time DB setup + dev server deps
+docker compose exec -d rails bash -lc 'bin/dev'                                                   # Start dev server (Foreman: web + css + worker)
+bin/clone_engine /path/to/tibo_core NewEngineName                                                 # Generate new engine from template (run on host)
 ```
+
+> **Note:** Always prefix `bundle exec rspec` with `RAILS_ENV=test`. The container has `RAILS_ENV=development` set in its environment, which overrides the `||=` default in `rails_helper.rb`.
 
 ## Architecture
 

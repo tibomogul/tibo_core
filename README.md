@@ -52,20 +52,18 @@ After cloning, set up your new engine:
 
 ```bash
 cd YourEngineName
-bundle install
-cd spec/dummy
-bin/rails db:create db:migrate RAILS_ENV=test
-cd ../..
-bundle exec rspec
+docker compose up -d
+docker compose exec rails bash -lc 'bin/setup'
+docker compose exec rails bash -lc 'bundle exec rspec'
 ```
 
 ## Development Workflow
 
 ### Running Tests
 ```bash
-bundle exec rspec                    # Run all specs
-bundle exec rspec spec/models/       # Run specific directory
-bundle exec rspec --format doc       # Verbose output
+docker compose exec rails bash -lc 'bundle exec rspec'                    # Run all specs
+docker compose exec rails bash -lc 'bundle exec rspec spec/models/'       # Run specific directory
+docker compose exec rails bash -lc 'bundle exec rspec --format doc'       # Verbose output
 ```
 
 ### Code Coverage
@@ -73,13 +71,16 @@ SimpleCov generates an HTML report in `coverage/` after each test run. Open `cov
 
 ### Linting
 ```bash
-bundle exec rubocop                  # Check code style
-bundle exec rubocop -a               # Auto-fix offenses
+docker compose exec rails bash -lc 'bundle exec rubocop'                  # Check code style
+docker compose exec rails bash -lc 'bundle exec rubocop -a'               # Auto-fix offenses
 ```
 
 ### Dummy App (Development Server)
 ```bash
-bin/dev
+docker compose exec rails bash -lc "bin/setup"                           # First-time DB setup
+docker compose exec rails bash -lc "ps aux | grep -E 'foreman' | grep -v grep" # Check if web and other processes have been started
+docker compose exec -d rails bash -lc "bin/dev"                                # Start (background/detached)
+docker compose exec rails bash -lc "pkill -f foreman || true"                  # Stop background dev server
 ```
 
 ## Integration into Host Applications
@@ -121,7 +122,6 @@ This template is designed to be forked and customized. Suggested improvements:
 - Additional Solid gem integrations
 - Enhanced generator templates
 - CI/CD pipeline configurations
-- Docker development environment
 
 ## License
 

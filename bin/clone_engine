@@ -3,7 +3,7 @@
 # ==============================================================================
 # Script Name: clone_engine.sh
 # Description: Automates the cloning and renaming of a Rails 8 Engine.
-#              Performs deep recursive renaming of files, directories, and 
+#              Performs deep recursive renaming of files, directories, and
 #              file contents to ensure namespace isolation and functional integrity.
 #
 # Usage:    ./clone_engine.sh <path_to_source_engine> <NewEngineName>
@@ -50,6 +50,14 @@ if [ ! -d "$SOURCE_PATH" ]; then
     exit 1
 fi
 
+if [ -z "$GIT_NAME" ] || [ -z "$GIT_EMAIL" ]; then
+    echo "Error: GIT_NAME and GIT_EMAIL environment variables must both be set."
+    echo "These are used for the initial git commit after cloning."
+    echo "  export GIT_NAME=\"Your Name\""
+    echo "  export GIT_EMAIL=\"you@example.com\""
+    exit 1
+fi
+
 # Calculate snake_case for the new name
 # Logic: Insert underscore between LowerUpper, then lowercase all.
 # Example: NexusAdmin -> nexus_admin
@@ -62,7 +70,7 @@ NEW_NAME_KEBAB=$(echo "$NEW_NAME_SNAKE" | tr '_' '-')
 
 # Define target path (sibling to source)
 PARENT_DIR=$(dirname "$SOURCE_PATH")
-TARGET_PATH="${PARENT_DIR}/${NEW_NAME_PASCAL}"
+TARGET_PATH="${PARENT_DIR}/${NEW_NAME_SNAKE}"
 
 echo "=========================================================="
 echo "   RAILS 8 ENGINE CLONING AUTOMATION"
@@ -80,17 +88,21 @@ if [ -d "$TARGET_PATH" ]; then
     exit 1
 fi
 
-echo "[1/6] Duplicating source directory..."
+echo "[1/7] Duplicating source directory..."
 cp -R "$SOURCE_PATH" "$TARGET_PATH"
 TARGET_CREATED=true
 cd "$TARGET_PATH"
 
-echo "[2/6] Sanitizing artifacts..."
-rm -rf .git         # Remove original git history
-rm -rf tmp/*        # Remove temp files
-rm -rf log/*        # Remove logs
-rm -rf .sass-cache  # Remove asset cache if present
-rm -f Gemfile.lock  # Force fresh dependency resolution
+echo "[2/7] Sanitizing artifacts..."
+rm -rf .git             # Remove original git history
+rm -rf tmp/*            # Remove temp files
+rm -rf log/*            # Remove logs
+rm -rf coverage         # Remove simplecov folder
+rm -rf .sass-cache      # Remove asset cache if present
+rm -f Gemfile.lock      # Force fresh dependency resolution
+rm -f CLAUDE.md         # Remove irrelevant file
+rm -f README.md         # Remove irrelevant file
+rm -f bin/clone_engine  # Remove this clone script
 
 # --- 3. ENVIRONMENT DETECTION ---
 
@@ -106,7 +118,7 @@ SED_CMD="sed -i .bak"
 
 # --- 4. CONTENT MUTATION ---
 
-echo "[3/6] Mutating file contents..."
+echo "[3/7] Mutating file contents..."
 
 # Function to perform recursive text replacement
 # Uses grep -I to ignore binary files (images, etc.)
@@ -114,7 +126,7 @@ echo "[3/6] Mutating file contents..."
 replace_text() {
     local find_str="$1"
     local replace_str="$2"
-    
+
     echo "  > Replacing '$find_str' with '$replace_str'..."
     grep -rlI "$find_str" . | while IFS= read -r file; do
         LC_ALL=C $SED_CMD "s/$find_str/$replace_str/g" "$file" && rm "$file.bak"
@@ -130,11 +142,17 @@ replace_text "$SOURCE_NAME_SNAKE" "$NEW_NAME_SNAKE"
 # Replace kebab-case references (e.g., Stimulus controllers, HTML attributes, CSS classes)
 replace_text "$SOURCE_NAME_KEBAB" "$NEW_NAME_KEBAB"
 
-# --- 5. RECURSIVE RENAMING ---
+# --- 5. TEMPLATE COPYING ---
 
-echo "[4/6] Renaming files and directories..."
+echo "[4/7] Copying templates..."
+cp clone/templates/README.md README.md
+rm -rf clone_templates
 
-# 5a. Rename FILES
+# --- 6. RECURSIVE RENAMING ---
+
+echo "[5/7] Renaming files and directories..."
+
+# 6a. Rename FILES
 # We do this before directories to ensure paths remain valid during loop
 find . -type f -name "*${SOURCE_NAME_SNAKE}*" | while read -r file; do
     dir=$(dirname "$file")
@@ -143,7 +161,7 @@ find . -type f -name "*${SOURCE_NAME_SNAKE}*" | while read -r file; do
     mv "$file" "$dir/$new_filename"
 done
 
-# 5b. Rename DIRECTORIES
+# 6b. Rename DIRECTORIES
 # We MUST use -depth to rename children before parents.
 # If we renamed parent first, the child path would become invalid.
 find . -type d -name "*${SOURCE_NAME_SNAKE}*" -depth | while read -r dir; do
@@ -153,24 +171,24 @@ find . -type d -name "*${SOURCE_NAME_SNAKE}*" -depth | while read -r dir; do
     mv "$dir" "$parent/$new_dirname"
 done
 
-# --- 6. FINALIZATION ---
+# --- 7. FINALIZATION ---
 
-echo "[5/6] Re-initializing version control..."
+echo "[6/7] Re-initializing version control..."
 git init > /dev/null
 git add .
 # set initial commit credentials
-export GIT_AUTHOR_NAME="${GIT_AUTHOR_NAME:-Tibo}"
-export GIT_AUTHOR_EMAIL="${GIT_AUTHOR_EMAIL:-tibo@example.com}"
-export GIT_COMMITTER_NAME="${GIT_COMMITTER_NAME:-Tibo}"
-export GIT_COMMITTER_EMAIL="${GIT_COMMITTER_EMAIL:-tibo@example.com}"
+export GIT_AUTHOR_NAME="${GIT_NAME}"
+export GIT_COMMITTER_NAME="${GIT_NAME}"
+export GIT_AUTHOR_EMAIL="${GIT_EMAIL}"
+export GIT_COMMITTER_EMAIL="${GIT_EMAIL}"
 git commit -m "Initial commit: Cloned from $SOURCE_NAME_PASCAL" > /dev/null
 
-echo "[6/6] Operation Complete."
+echo "[7/7] Operation Complete."
 echo ""
 echo "NEXT STEPS:"
 echo "1. cd $TARGET_PATH"
-echo "2. bundle install"
-echo "3. bin/rails db:create db:migrate (in test/dummy)"
-echo "4. bin/rails test"
+echo "2. docker compose up -d"
+echo "3. docker compose exec rails bash -lc 'cd spec/dummy && bin/rails db:reset'"
+echo "4. docker compose exec rails bash -lc 'bundle exec rspec'"
 echo ""
 echo "The engine '$NEW_NAME_PASCAL' is ready for development."
