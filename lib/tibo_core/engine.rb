@@ -15,5 +15,23 @@ module TiboCore
         FactoryBot.definition_file_paths << File.expand_path("../../../spec/factories", __FILE__)
       end
     end
+
+    initializer "tibo_core.importmap", before: "importmap" do |app|
+      if app.config.respond_to?(:importmap)
+        app.config.importmap.paths << Engine.root.join("config/importmap.rb")
+        app.config.importmap.cache_sweepers << Engine.root.join("app/javascript")
+      end
+    end
+
+    initializer "tibo_core.assets" do |app|
+      if app.config.respond_to?(:assets)
+        app.config.assets.paths << Engine.root.join("app/javascript")
+      end
+    end
+
+    # Ensure the engine's assets are visible to the host's pipeline
+    initializer "tibo_core.assets.precompile" do |app|
+      app.config.assets.paths << root.join("app/assets/tailwind")
+    end
   end
 end
