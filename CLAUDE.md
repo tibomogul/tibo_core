@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-TiboCore is a **Rails 8.1 mountable engine template** with namespace isolation (`TiboCore::`) and the Solid trifecta (Solid Queue, Solid Cache, Solid Cable), Tailwind CSS, and Importmap Rails. It's designed to be cloned via `bin/clone_engine` to generate new engines with automatic namespace renaming.
+TiboCore is a **Rails 8.1 mountable engine template** with namespace isolation (`TiboCore::`) and the Solid trifecta (Solid Queue, Solid Cache, Solid Cable), Tailwind CSS v4, and Importmap Rails. It's designed to be cloned via `bin/clone_engine` to generate new engines with automatic namespace renaming.
 
 ## Commands
 
@@ -28,7 +28,7 @@ This is a **Rails engine gem** (not a standalone app). All application code live
 
 - `lib/tibo_core.rb` — main entry point, requires Solid gems, Tailwind, Importmap
 - `lib/tibo_core/engine.rb` — engine configuration with namespace isolation
-- `spec/dummy/` — full Rails 8.1 app used for testing the engine (has its own config, routes, db)
+- `spec/dummy/` — full Rails 8.1 app used for testing the engine (has its own config, routes, db); uses **Tailwind CSS v4** and **DaisyUI** for styling
 - Engine is mounted at `/tibo_core` in the dummy app's routes
 
 ### Multi-Database (Solid Trifecta)
@@ -44,6 +44,14 @@ The dummy app uses four separate SQLite databases: `primary`, `queue`, `cache`, 
 - Use `TiboCore::Engine.routes.url_helpers` for engine route helpers in specs
 - Use `main_app.` prefix for host app routes within engine context
 - FactoryBot factories go in `spec/factories/`, auto-loaded via engine initializer
+
+## UI Development
+
+### Dummy App
+Use **DaisyUI** components for all UI work in the dummy app. Reference docs: https://daisyui.com/llms.txt
+
+### Engine
+Use **Tailwind CSS v4 only** — no DaisyUI dependency. Engine styles must be self-contained and must not rely on DaisyUI being present in the host app. However, ensure engine styles are compatible with DaisyUI (i.e. they don't conflict when DaisyUI is also loaded).
 
 ## Code Style
 
