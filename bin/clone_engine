@@ -99,7 +99,7 @@ rm -rf tmp/*            # Remove temp files
 rm -rf log/*            # Remove logs
 rm -rf coverage         # Remove simplecov folder
 rm -rf .sass-cache      # Remove asset cache if present
-rm -f Gemfile.lock      # Force fresh dependency resolution
+# rm -f Gemfile.lock      # Force fresh dependency resolution
 rm -f CLAUDE.md         # Remove irrelevant file
 rm -f README.md         # Remove irrelevant file
 rm -f bin/clone_engine  # Remove this clone script
@@ -145,7 +145,7 @@ replace_text "$SOURCE_NAME_KEBAB" "$NEW_NAME_KEBAB"
 # --- 5. TEMPLATE COPYING ---
 
 echo "[4/7] Copying templates..."
-cp clone/templates/README.md README.md
+cp ./clone_templates/README.md ./README.md
 rm -rf clone_templates
 
 # --- 6. RECURSIVE RENAMING ---
