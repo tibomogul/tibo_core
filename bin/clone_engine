@@ -99,7 +99,6 @@ rm -rf tmp/*            # Remove temp files
 rm -rf log/*            # Remove logs
 rm -rf coverage         # Remove simplecov folder
 rm -rf .sass-cache      # Remove asset cache if present
-# rm -f Gemfile.lock      # Force fresh dependency resolution
 rm -f CLAUDE.md         # Remove irrelevant file
 rm -f README.md         # Remove irrelevant file
 rm -f bin/clone_engine  # Remove this clone script
@@ -146,6 +145,7 @@ replace_text "$SOURCE_NAME_KEBAB" "$NEW_NAME_KEBAB"
 
 echo "[4/7] Copying templates..."
 cp ./clone_templates/README.md ./README.md
+cp ./clone_templates/CLAUDE.md ./CLAUDE.md
 rm -rf clone_templates
 
 # --- 6. RECURSIVE RENAMING ---
@@ -188,7 +188,7 @@ echo ""
 echo "NEXT STEPS:"
 echo "1. cd $TARGET_PATH"
 echo "2. docker compose up -d"
-echo "3. docker compose exec rails bash -lc 'cd spec/dummy && bin/rails db:reset'"
+echo "3. docker compose exec rails bash -lc 'bin/setup'"
 echo "4. docker compose exec rails bash -lc 'bundle exec rspec'"
 echo ""
 echo "The engine '$NEW_NAME_PASCAL' is ready for development."
