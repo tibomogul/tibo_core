@@ -53,6 +53,78 @@ Use **DaisyUI** components for all UI work in the dummy app. Reference docs: htt
 ### Engine
 Use **Tailwind CSS v4 only** — no DaisyUI dependency. Engine styles must be self-contained and must not rely on DaisyUI being present in the host app. However, ensure engine styles are compatible with DaisyUI (i.e. they don't conflict when DaisyUI is also loaded).
 
+## Tailwind CSS v4 + Engine Architecture
+
+### How the CSS pipeline works
+
+The engine's Tailwind source lives at `app/assets/tailwind/tibo_core/engine.css`. It is **not** built standalone — it is compiled into the **host app's** (or dummy app's) `tailwind.css` via an import stub.
+
+The dummy app opts in at `spec/dummy/app/assets/tailwind/application.css`:
+```css
+@import "../builds/tailwind/tibo_core";
+```
+
+That stub file (`spec/dummy/app/assets/builds/tailwind/tibo_core.css`) re-imports the engine source using an absolute path. When the dummy app runs `tailwindcss:build`, it processes this chain and compiles all engine CSS inline into the output `tailwind-xxx.css`.
+
+**To rebuild CSS after changes to engine views or engine.css:**
+```bash
+docker compose exec rails bash -lc 'cd spec/dummy && bundle exec rails tailwindcss:build'
+```
+
+Always rebuild after adding new Tailwind classes to engine views — Tailwind v4 scans source files at build time.
+
+### Engine layout CSS reference
+
+The engine layout (`app/views/layouts/tibo_core/application.html.erb`) uses:
+```erb
+<%= stylesheet_link_tag "tailwind", media: "all" %>
+```
+This references the **host app's compiled** `tailwind.css`, which already includes the engine CSS. Do NOT reference `tibo_core/application` for Tailwind styles — the Sprockets manifest cannot reach the Tailwind build output.
+
+### Source scanning in engine.css
+
+The `@source` directive in `engine.css` tells Tailwind where to scan for class usage:
+```css
+@source "../../../views";  /* resolves to app/views/ from engine.css location */
+```
+This is resolved relative to `engine.css`. When the host app builds, Tailwind follows the import chain and uses this path to find engine views. Any new view directories added to the engine must be reachable from this source path.
+
+### CSS variable strategy for theming
+
+Engine views must never use DaisyUI component classes. Instead, use **`--tc-*` CSS custom properties** (prefixed to avoid collision with DaisyUI's `--color-*` variables) defined in `engine.css`.
+
+Theme priority (defined in `engine.css`):
+1. `[data-theme="dark"]` — explicit DaisyUI dark theme on `<html>` (host app compatibility)
+2. `@media (prefers-color-scheme: dark) { :root:not([data-theme]) }` — OS dark mode fallback when no DaisyUI theme is set
+3. `:root` defaults — light
+
+Use these variables in views with Tailwind v4 arbitrary values:
+```erb
+<div class="bg-[var(--tc-bg)] text-[var(--tc-text)]">
+```
+
+Available tokens: `--tc-bg`, `--tc-bg-subtle`, `--tc-surface`, `--tc-border`, `--tc-text`, `--tc-text-muted`, `--tc-primary`, `--tc-primary-fg`, `--tc-accent`, `--tc-code-bg`.
+
+### Theme sync with host app
+
+The engine layout reads `localStorage('theme')` on page load to stay in sync with DaisyUI's theme toggle:
+```html
+<script>
+  (function() {
+    var t = localStorage.getItem('theme');
+    if (t) document.documentElement.setAttribute('data-theme', t);
+  })();
+</script>
+```
+This is a best-effort sync — it only works when the host app uses the same `localStorage('theme')` convention (as the dummy app does).
+
+### Linking back to the host app from engine views
+
+Use `main_app.root_path` (not a hardcoded path) to link back to the host application:
+```erb
+<a href="<%= main_app.root_path %>">App ↗</a>
+```
+
 ## Code Style
 
 RuboCop with `rubocop-rails-omakase` (Rails official style). Ruby 3.3.4.
