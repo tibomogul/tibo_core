@@ -11,7 +11,8 @@ This repository serves as a **template** for rapidly generating new Rails engine
 - **Solid Queue** - SQL-backed background job processing
 - **Solid Cache** - Database-backed caching layer
 - **Solid Cable** - Database-backed Action Cable adapter
-- **Tailwind CSS** - Utility-first styling via `tailwindcss-rails`
+- **Tailwind CSS v4** - Utility-first styling via `tailwindcss-rails`
+- **DaisyUI** - Component library for the dummy app (engine styles are DaisyUI-free)
 - **Importmap Rails** - JavaScript module management without bundling
 
 ### Testing & Quality
@@ -105,6 +106,14 @@ Rails.application.routes.draw do
   mount YourEngineName::Engine => "/your_engine"
 end
 ```
+
+## UI Development
+
+### Dummy App
+The dummy app (`spec/dummy/`) uses **Tailwind CSS v4** and **DaisyUI** for all UI work. Reference: https://daisyui.com/llms.txt
+
+### Engine
+Engine views use **Tailwind CSS v4 only** — no DaisyUI dependency. Engine styles must work standalone in any host app. They should be compatible with DaisyUI (no conflicts) but must not require it.
 
 ## Database Configuration Notes
 
