@@ -38,5 +38,6 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "simplecov"
   spec.add_development_dependency "capybara"
   spec.add_development_dependency "selenium-webdriver"
+  spec.add_development_dependency "stimulus-rails"
   spec.add_development_dependency "debug"
 end
